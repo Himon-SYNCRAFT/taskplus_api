@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
-from endpoints import app
+from create_app import app
 
 engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 

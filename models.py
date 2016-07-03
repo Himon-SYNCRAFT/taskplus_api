@@ -3,16 +3,13 @@ from database import Model
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, \
     Boolean, LargeBinary
 from sqlalchemy.orm import relationship
-from flask_bcrypt import Bcrypt
-from endpoints import app
-
-bcrypt = Bcrypt(app)
+from create_app import app, bcrypt
 
 
 class User(Model):
     __tablename__ = 'users'
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     login = Column(String(length=128), unique=True, nullable=False)
     first_name = Column(String(length=128), nullable=False)
     last_name = Column(String(length=128), nullable=False)
@@ -43,22 +40,33 @@ class User(Model):
     def check_password_hash(self, password):
         return bcrypt.check_password_hash(self.password, password)
 
+    def to_dict(self):
+        return dict(
+            id=self.id,
+            login=self.login,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            is_creator=self.is_creator,
+            is_contractor=self.is_contractor,
+            is_admin=self.is_admin
+        )
+
 
 class Task(Model):
     __tablename__ = 'tasks'
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(length=128), nullable=False)
     external_identifier = Column(String(length=128), nullable=True)
-    type_id = Column(Integer(), ForeignKey('task_types.id'), nullable=False)
-    end_date = Column(DateTime())
-    create_date = Column(DateTime(), nullable=False)
+    type_id = Column(Integer, ForeignKey('task_types.id'), nullable=False)
+    end_date = Column(DateTime(timezone=True))
+    create_date = Column(DateTime(timezone=True), nullable=False)
 
     # Foreign keys
-    status_id = Column(Integer(), ForeignKey(
+    status_id = Column(Integer, ForeignKey(
         'task_statuses.id'), nullable=False)
-    creator_id = Column(Integer(), ForeignKey('users.id'), nullable=False)
-    contractor_id = Column(Integer(), ForeignKey('users.id'), nullable=True)
+    creator_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    contractor_id = Column(Integer, ForeignKey('users.id'), nullable=True)
 
     # Relationships
     status = relationship('TaskStatus', back_populates='tasks')
@@ -67,6 +75,7 @@ class Task(Model):
         'User', back_populates='created_tasks', foreign_keys=[creator_id])
     contractor = relationship(
         'User', back_populates='completed_tasks', foreign_keys=[contractor_id])
+    content = relationship('TaskAttributeValue')
 
     def __init__(self, name, type_id, status_id, creator_id, external_identifier=None):
         self.name = name
@@ -76,11 +85,24 @@ class Task(Model):
         self.external_identifier = external_identifier
         self.create_date = datetime.today()
 
+    def to_dict(self):
+        return dict(
+            id=self.id,
+            name=self.name,
+            external_identifier=self.external_identifier,
+            type_id=self.type_id,
+            end_date=self.end_date,
+            create_date=self.create_date,
+            status_id=self.status_id,
+            creator_id=self.creator_id,
+            contractor_id=self.contractor_id
+        )
+
 
 class TaskStatus(Model):
     __tablename__ = 'task_statuses'
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(length=128), unique=True, nullable=False)
 
     tasks = relationship('Task', back_populates='status')
@@ -92,7 +114,7 @@ class TaskStatus(Model):
 class TaskType(Model):
     __tablename__ = 'task_types'
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(length=128), unique=True, nullable=False)
 
     # Relationships
@@ -107,11 +129,11 @@ class TaskType(Model):
 class TaskAttribute(Model):
     __tablename__ = 'task_attributes'
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(length=128), unique=True, nullable=False)
 
     # Foreign keys
-    type_id = Column(Integer(), ForeignKey(
+    type_id = Column(Integer, ForeignKey(
         'task_attribute_types.id'), nullable=False)
 
     def __init__(self, name, type_id):
@@ -122,11 +144,11 @@ class TaskAttribute(Model):
 class TaskAttributeToTaskType(Model):
     __tablename__ = 'task_attribute_to_task_type'
 
-    task_type_id = Column(Integer(), ForeignKey(
+    task_type_id = Column(Integer, ForeignKey(
         'task_types.id'), primary_key=True)
-    task_attribute_id = Column(Integer(), ForeignKey(
+    task_attribute_id = Column(Integer, ForeignKey(
         'task_attributes.id'), primary_key=True)
-    sort = Column(Integer(), nullable=False, default=0)
+    sort = Column(Integer, nullable=False, default=0)
     rules = Column(Text)
 
     def __init__(self, task_type_id, task_attribute_id, sort=0, rules=None):
@@ -139,17 +161,23 @@ class TaskAttributeToTaskType(Model):
 class TaskAttributeValue(Model):
     __tablename__ = 'task_attribute_values'
 
-    id = Column(Integer(), primary_key=True)
-    value = Column(Text(), nullable=False)
+    value = Column(Text, nullable=False)
 
-    def __init__(self, value):
+    # Foreign keys
+    task_id = Column(Integer, ForeignKey('tasks.id'), primary_key=True)
+    task_attribute_id = Column(Integer, ForeignKey(
+        'task_attributes.id'), primary_key=True)
+
+    def __init__(self, task_id, task_attribute_id, value):
         self.value = value
+        self.task_id = task_id
+        self.task_attribute_id = task_attribute_id
 
 
 class TaskAttributeType(Model):
     __tablename__ = 'task_attribute_types'
 
-    id = Column(Integer(), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(length=128), unique=True, nullable=False)
 
     def __init__(self, name):
