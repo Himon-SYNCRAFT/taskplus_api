@@ -10,13 +10,19 @@ bcrypt = Bcrypt(app)
 
 
 @app.cli.command()
-@click.option('-n', default=None)
-def test(n):
-    case_name = n
+@click.argument('data', nargs=-1)
+def test(data):
+    case_name = 'test_' + data[0] + '.Test' + data[0].title()
 
-    if case_name is not None:
-        tests = unittest.TestLoader().discover(
-            'tests', pattern='test*' + case_name + '.py')
+    if len(data) > 1:
+        test_name = data[1]
     else:
-        tests = unittest.TestLoader().discover('tests')
+        test_name = ''
+
+    tests_path = case_name
+
+    if test_name:
+        tests_path += '.' + test_name
+
+    tests = unittest.TestLoader().loadTestsFromName('tests.' + tests_path)
     unittest.TextTestRunner(verbosity=2).run(tests)

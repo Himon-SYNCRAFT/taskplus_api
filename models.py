@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, \
     Boolean, LargeBinary
 from sqlalchemy.orm import relationship
 from create_app import app, bcrypt
+from exceptions import ValidationError
 
 
 class User(Model):
@@ -34,6 +35,12 @@ class User(Model):
 
         self.generate_password_hash(password)
 
+    def _get_fields(self):
+        fields = ['login', 'first_name', 'last_name',
+                  'is_creator', 'is_contractor', 'is_admin']
+
+        return fields
+
     def generate_password_hash(self, password):
         self.password = bcrypt.generate_password_hash(password, rounds=12)
 
@@ -50,6 +57,38 @@ class User(Model):
             is_contractor=self.is_contractor,
             is_admin=self.is_admin
         )
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        user = User(login='tmp', password='tmp',
+                    first_name='tmp', last_name='tmp')
+
+        for field in user._get_fields():
+            try:
+                setattr(user, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        try:
+            user.generate_password_hash(data['password'])
+        except KeyError as e:
+            raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return user
+
+    def __str__(self):
+        return str(self.to_dict())
 
 
 class Task(Model):
