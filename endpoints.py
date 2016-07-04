@@ -1,9 +1,10 @@
 from create_app import app
 from flask import jsonify, abort, request
-from flask.json import loads as json_loads
 from models import Task, User
 from database import db_session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, StatementError
+from validation.json import validate_json
+
 
 @app.route('/')
 def index():
@@ -24,13 +25,14 @@ def get_user(user_id):
     return jsonify(user.to_dict()), 200
 
 @app.route('/user/<int:user_id>', methods=['PUT'])
+@validate_json('user', 'update')
 def update_user(user_id):
     user = User.query.filter_by(id=user_id).first()
 
     if not user:
         abort(404)
 
-    data = json_loads(request.data)
+    data = request.get_json()
 
     try:
         user.update_from_dict(data)

@@ -172,7 +172,10 @@ class TestUser(Base):
         )
 
         response = self.client.put(
-            '/user/' + str(user.id), data=json.dumps(user_dict))
+            '/user/' + str(user.id),
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
 
         self.assertStatus(response, 200)
         self.assertTrue(is_json(response.get_data()), 'Response is not json')
@@ -199,7 +202,10 @@ class TestUser(Base):
         )
 
         response = self.client.put(
-            '/user/' + '123124134', data=json.dumps(user_dict))
+            '/user/' + '123124134',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
         self.assertStatus(response, 404)
 
         response = self.client.put(
@@ -228,12 +234,32 @@ class TestUser(Base):
         user2 = User.query.first()
 
         response = self.client.put(
-            '/user/' + str(user2.id), data=json.dumps(user_dict))
-
-        print(response.get_data())
+            '/user/' + str(user2.id),
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
 
         self.assertStatus(response, 409)
 
         user2 = User.query.first()
 
         self.assertNotEqual(user2.login, user_dict['login'])
+
+    def test_update_user_invalid_data(self):
+        user_dict = dict(
+            login='konbis',
+            is_creator='konbis',
+        )
+
+        user = User.query.first()
+
+        response = self.client.put(
+            '/user/' + str(user.id),
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        user = User.query.filter_by(login=user_dict['login']).first()
+        self.assertIsNone(user)
