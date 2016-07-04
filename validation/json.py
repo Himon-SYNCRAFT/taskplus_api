@@ -8,9 +8,10 @@ from importlib import import_module
 
 def validate_json(filename, schema_name):
     """
-    Function for validating json requests.
+    Decorator for validating requests.
 
-    :attr
+    Function uses schema 'schema_name' which can be find in
+    '/validation/schemas/filename.py'
     """
     def decorator(f):
         @wraps(f)
@@ -25,9 +26,9 @@ def validate_json(filename, schema_name):
             try:
                 schema(request.get_json())
             except MultipleInvalid as e:
-                return jsonify(dict(message='Invalid data')), 400
-            # except Invalid as e:
-            #     return jsonify(dict(message='Invalid data')), 400
+                message = 'Invalid value for {0}. {1}'.format(
+                    e.path, e.error_message)
+                return jsonify(dict(message=message)), 400
 
             return f(*args, **kw)
         return wrapper

@@ -1,7 +1,7 @@
 from tests.base import Base
 from tests.utils import is_json
 from flask import json
-from models import User
+from models import User, Task
 from database import db_session
 from exceptions import ValidationError
 
@@ -263,3 +263,123 @@ class TestUser(Base):
 
         user = User.query.filter_by(login=user_dict['login']).first()
         self.assertIsNone(user)
+
+    def test_create_user(self):
+        count_before_insert = User.query.count()
+
+        user_dict = dict(
+            login='konbis',
+            first_name='Konrad',
+            last_name='Biś',
+            password='secret',
+            is_creator=True,
+            is_contractor=True,
+            is_admin=False,
+            junk='abcd'
+        )
+
+        response = self.client.post(
+            '/user',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        count_after_insert = User.query.count()
+
+        self.assertStatus(response, 201)
+
+        user = User.query.filter_by(login='konbis').first()
+
+        self.assertEqual(count_before_insert + 1, count_after_insert)
+        self.assertIsNotNone(user)
+        self.assertEqual(json.loads(response.get_data()), user.to_dict())
+
+    def test_create_user_invalid_data(self):
+        count_before_insert = User.query.count()
+
+        user_dict = dict(
+            login='konbis',
+            first_name='Konrad',
+            last_name='Biś',
+            password='secret',
+            is_creator='a',
+            is_contractor=True,
+            is_admin=False,
+            junk='abcd'
+        )
+
+        response = self.client.post(
+            '/user',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        count_after_insert = User.query.count()
+
+        self.assertStatus(response, 400)
+
+        user = User.query.filter_by(login='konbis').first()
+
+        self.assertEqual(count_before_insert, count_after_insert)
+        self.assertIsNone(user)
+
+    def test_create_user_duplicate(self):
+        user_dict = dict(
+            login='konbis',
+            first_name='Konrad',
+            last_name='Biś',
+            password='secret',
+            is_creator=True,
+            is_contractor=True,
+            is_admin=False,
+            junk='abcd'
+        )
+
+        user = User.create_from_dict(user_dict)
+        db_session.add(user)
+        db_session.commit()
+
+        count_before_insert = User.query.count()
+
+        response = self.client.post(
+            '/user',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        count_after_insert = User.query.count()
+
+        self.assertStatus(response, 409)
+        self.assertEqual(count_before_insert, count_after_insert)
+
+    def test_delete_user(self):
+        user = User.query.first()
+        user_id = user.id
+
+        count_before_delete = User.query.count()
+        response = self.client.delete('/user/' + str(user.id))
+        count_after_delete = User.query.count()
+
+        self.assertStatus(response, 204)
+        self.assertIsNone(User.query.filter_by(id=user_id).first())
+        self.assertEqual(count_before_delete, count_after_delete + 1)
+
+    def test_delete_not_existing_user(self):
+        count_before_delete = User.query.count()
+        response = self.client.delete('/user/' + str(234234234))
+        count_after_delete = User.query.count()
+
+        self.assertStatus(response, 404)
+        self.assertEqual(count_before_delete, count_after_delete)
+
+    def test_delete_user_which_cant_be_deleted(self):
+        task = Task.query.first()
+        user = task.creator
+
+        count_before_delete = User.query.count()
+        response = self.client.delete('/user/' + str(user.id))
+        count_after_delete = User.query.count()
+
+        self.assertStatus(response, 409)
+        self.assertIsNotNone(User.query.filter_by(id=user.id).first())
+        self.assertEqual(count_before_delete, count_after_delete)
