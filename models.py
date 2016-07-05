@@ -149,6 +149,38 @@ class TaskStatus(Model):
     def __init__(self, name):
         self.name = name
 
+    def to_dict(self):
+        return dict(id=self.id, name=self.name)
+
+    def _get_fields(self):
+        fields = ['name']
+
+        return fields
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        status = TaskStatus(name='tmp')
+
+        for field in status._get_fields():
+            try:
+                setattr(status, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return status
+
+
 
 class TaskType(Model):
     __tablename__ = 'task_types'

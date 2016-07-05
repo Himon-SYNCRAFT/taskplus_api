@@ -33,3 +33,14 @@ create = Schema(
     },
     extra=ALLOW_EXTRA
 )
+
+query = Schema(
+    {
+        'login': All(str, Length(min=login_min, max=login_max)),
+        'first_name': All(str, Length(min=first_name_min, max=first_name_max)),
+        'last_name': All(str, Length(min=last_name_min, max=last_name_max)),
+        'is_creator': bool,
+        'is_contractor': bool,
+        'is_admin': bool,
+    },
+)

@@ -383,3 +383,31 @@ class TestUser(Base):
         self.assertStatus(response, 409)
         self.assertIsNotNone(User.query.filter_by(id=user.id).first())
         self.assertEqual(count_before_delete, count_after_delete)
+
+    def test_get_user_list(self):
+        response = self.client.get('/users')
+
+        self.assertStatus(response, 200)
+
+        data = json.loads(response.get_data())
+        count = User.query.count()
+
+        self.assertEqual(len(data), count)
+
+    def test_get_user_list_by(self):
+        response = self.client.get('/users?login=admin&first_name=Daniel')
+
+        self.assertStatus(response, 200)
+
+        data = json.loads(response.get_data())
+        users = User.query.filter_by(login='admin', first_name='Daniel').all()
+
+        users_list = [user.to_dict() for user in users]
+
+        self.assertEqual(len(data), len(users))
+        self.assertListEqual(data, users_list)
+
+    def test_get_user_list_by_invalid_parameter(self):
+        response = self.client.get('/users?username=admin&first_name=Daniel')
+
+        self.assertStatus(response, 400)
