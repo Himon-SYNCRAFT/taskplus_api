@@ -302,7 +302,7 @@ class TestStatus(Base):
         self.assertEqual(count_before_delete, count_after_delete)
 
     def test_get_status_list(self):
-        response = self.client.get('/statuses')
+        response = self.client.get('/task/statuses')
 
         self.assertStatus(response, 200)
 
@@ -312,7 +312,7 @@ class TestStatus(Base):
         self.assertEqual(len(data), count)
 
     def test_get_status_list_by(self):
-        response = self.client.get('/statuses?name=Nowe')
+        response = self.client.get('/task/statuses?name=Nowe')
 
         self.assertStatus(response, 200)
 
@@ -326,6 +326,6 @@ class TestStatus(Base):
 
     def test_get_status_list_by_invalid_parameter(self):
         response = self.client.get(
-            '/statuses?statusname=admin&first_name=Daniel')
+            '/task/statuses?statusname=admin&first_name=Daniel')
 
         self.assertStatus(response, 400)

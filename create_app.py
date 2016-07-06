@@ -25,4 +25,4 @@ def test(data):
         tests_path += '.' + test_name
 
     tests = unittest.TestLoader().loadTestsFromName('tests.' + tests_path)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest.TextTestRunner(verbosity=2, failfast=True).run(tests)

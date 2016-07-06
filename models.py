@@ -181,7 +181,6 @@ class TaskStatus(Model):
         return status
 
 
-
 class TaskType(Model):
     __tablename__ = 'task_types'
 
@@ -195,6 +194,37 @@ class TaskType(Model):
 
     def __init__(self, name):
         self.name = name
+
+    def _get_fields(self):
+        fields = ['name']
+
+        return fields
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        task_type = TaskType(name='tmp')
+
+        for field in task_type._get_fields():
+            try:
+                setattr(task_type, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return task_type
+
+    def to_dict(self):
+        return dict(id=self.id, name=self.name)
 
 
 class TaskAttribute(Model):
@@ -211,14 +241,45 @@ class TaskAttribute(Model):
         self.name = name
         self.type_id = type_id
 
+    def _get_fields(self):
+        fields = ['name', 'type_id']
+
+        return fields
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        attribute = TaskAttribute(name='tmp', type_id=1)
+
+        for field in attribute._get_fields():
+            try:
+                setattr(attribute, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return attribute
+
+    def to_dict(self):
+        return dict(id=self.id, name=self.name, type_id=self.type_id)
+
 
 class TaskAttributeToTaskType(Model):
     __tablename__ = 'task_attribute_to_task_type'
 
     task_type_id = Column(Integer, ForeignKey(
-        'task_types.id'), primary_key=True)
+        'task_types.id'), primary_key=True, nullable=False)
     task_attribute_id = Column(Integer, ForeignKey(
-        'task_attributes.id'), primary_key=True)
+        'task_attributes.id'), primary_key=True, nullable=False)
     sort = Column(Integer, nullable=False, default=0)
     rules = Column(Text)
 
@@ -235,14 +296,22 @@ class TaskAttributeValue(Model):
     value = Column(Text, nullable=False)
 
     # Foreign keys
-    task_id = Column(Integer, ForeignKey('tasks.id'), primary_key=True)
+    task_id = Column(Integer, ForeignKey('tasks.id'),
+                     primary_key=True, nullable=False)
     task_attribute_id = Column(Integer, ForeignKey(
-        'task_attributes.id'), primary_key=True)
+        'task_attributes.id', ondelete='RESTRICT'), primary_key=True, nullable=False)
 
     def __init__(self, task_id, task_attribute_id, value):
         self.value = value
         self.task_id = task_id
         self.task_attribute_id = task_attribute_id
+
+    def to_dict(self):
+        return dict(
+            value=self.value,
+            task_id=self.task_id,
+            task_attribute_id=self.task_attribute_id
+        )
 
 
 class TaskAttributeType(Model):

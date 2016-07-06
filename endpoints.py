@@ -1,6 +1,6 @@
 from create_app import app
 from flask import jsonify, abort, request
-from models import Task, User, TaskStatus
+from models import Task, User, TaskStatus, TaskType, TaskAttribute
 from database import db_session
 from sqlalchemy.exc import IntegrityError, StatementError
 from validation.json import validate_json
@@ -9,7 +9,7 @@ from validation.query import validate_query
 
 @app.route('/user/<int:user_id>', methods=['GET'])
 def get_user(user_id):
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.get(user_id)
 
     if user is None:
         abort(404)
@@ -19,7 +19,7 @@ def get_user(user_id):
 @app.route('/user/<int:user_id>', methods=['PUT'])
 @validate_json('user', 'update')
 def update_user(user_id):
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.get(user_id)
 
     if not user:
         abort(404)
@@ -54,20 +54,19 @@ def create_user():
 
 @app.route('/user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    user = User.query.filter_by(id=user_id).first()
+    user = User.query.get(user_id)
 
-    if not user:
+    if user is None:
         abort(404)
 
+    db_session.delete(user)
+
     try:
-        db_session.delete(user)
+
         db_session.commit()
     except IntegrityError:
         db_session.rollback()
-        return jsonify(dict(message='User cannot be deleteted')), 409
-
-    db_session.delete(user)
-    db_session.commit()
+        return jsonify(dict(message='User cannot be deleted')), 409
 
     return '', 204
 
@@ -83,7 +82,7 @@ def get_users_list():
 
 @app.route('/task/status/<int:status_id>')
 def get_status(status_id):
-    status = TaskStatus.query.filter_by(id=status_id).first()
+    status = TaskStatus.query.get(status_id)
     if status is None:
         abort(404)
 
@@ -93,7 +92,7 @@ def get_status(status_id):
 @app.route('/task/status/<int:status_id>', methods=['PUT'])
 @validate_json('status', 'update')
 def update_status(status_id):
-    status = TaskStatus.query.filter_by(id=status_id).first()
+    status = TaskStatus.query.get(status_id)
 
     if status is None:
         abort(404)
@@ -105,7 +104,7 @@ def update_status(status_id):
         db_session.commit()
     except IntegrityError:
         db_session.rollback()
-        return jsonify(dict(message='Status name already exist')), 409
+        return jsonify(dict(message='Status name must be unique.')), 409
 
     return jsonify(status.to_dict())
 
@@ -115,20 +114,21 @@ def update_status(status_id):
 def create_status():
     data = request.get_json()
     status = TaskStatus.create_from_dict(data)
+
     db_session.add(status)
 
     try:
         db_session.commit()
     except IntegrityError:
         db_session.rollback()
-        return jsonify(dict(message='Status name already exist')), 409
+        return jsonify(dict(message='Status name must be unique.')), 409
 
     return jsonify(status.to_dict()), 201
 
 
 @app.route('/task/status/<int:status_id>', methods=['DELETE'])
 def delete_status(status_id):
-    status = TaskStatus.query.filter_by(id=status_id).first()
+    status = TaskStatus.query.get(status_id)
 
     if status is None:
         abort(404)
@@ -139,15 +139,165 @@ def delete_status(status_id):
         db_session.commit()
     except IntegrityError:
         db_session.rollback()
-        return jsonify(dict(message='Status cannot be deleteted')), 409
+        return jsonify(dict(message='Status cannot be deleted')), 409
 
     return '', 204
 
 
-@app.route('/statuses')
+@app.route('/task/statuses')
 @validate_query('status', 'query')
 def get_statuses_list():
     statuses = [status.to_dict()
                 for status in TaskStatus.query.filter_by(**request.args.to_dict()).all()]
 
     return jsonify(statuses), 200
+
+
+@app.route('/task/type/<int:type_id>')
+def get_type(type_id):
+    task_type = TaskType.query.get(type_id)
+
+    if task_type is None:
+        abort(404)
+
+    return jsonify(task_type.to_dict()), 200
+
+
+@app.route('/task/type/<int:type_id>', methods=['PUT'])
+@validate_json('type', 'update')
+def update_type(type_id):
+    task_type = TaskType.query.get(type_id)
+
+    if task_type is None:
+        abort(404)
+
+    data = request.get_json()
+    task_type.update_from_dict(data)
+
+    try:
+        db_session.commit()
+    except IntegrityError:
+        db_session.rollback()
+        return jsonify(message='Type name must be unique.'), 409
+
+    return jsonify(task_type.to_dict()), 200
+
+
+@app.route('/task/type', methods=['POST'])
+@validate_json('type', 'create')
+def create_type():
+    data = request.get_json()
+    task_type = TaskType.create_from_dict(data)
+
+    db_session.add(task_type)
+
+    try:
+        db_session.commit()
+    except IntegrityError:
+        db_session.rollback()
+        return jsonify(message='Type name must be unique.'), 409
+
+    return jsonify(task_type.to_dict()), 201
+
+
+@app.route('/task/type/<int:type_id>', methods=['DELETE'])
+def delete_type(type_id):
+    task_type = TaskType.query.get(type_id)
+
+    if task_type is None:
+        abort(404)
+
+    db_session.delete(task_type)
+
+    try:
+        db_session.commit()
+    except:
+        db_session.rollback()
+        return jsonify(message='Type cannot be deleted'), 409
+
+    return '', 204
+
+
+@app.route('/task/types')
+@validate_query('type', 'query')
+def get_types_list():
+    query_data = request.args.to_dict()
+    types = [task_type.to_dict()
+             for task_type in TaskType.query.filter_by(**query_data).all()]
+
+    return jsonify(types), 200
+
+
+@app.route('/task/attribute/<int:attribute_id>')
+def get_attribute(attribute_id):
+    attribute = TaskAttribute.query.get(attribute_id)
+
+    if attribute is None:
+        abort(404)
+
+    return jsonify(attribute.to_dict()), 200
+
+
+@app.route('/task/attribute/<int:attribute_id>', methods=['PUT'])
+@validate_json('attribute', 'update')
+def update_attribute(attribute_id):
+    attribute = TaskAttribute.query.get(attribute_id)
+
+    if attribute is None:
+        abort(404)
+
+    data = request.get_json()
+    attribute.update_from_dict(data)
+
+    try:
+        db_session.commit()
+    except IntegrityError:
+        db_session.rollback()
+        return jsonify(message='Attribute name must be unique.'), 409
+
+    return jsonify(attribute.to_dict()), 200
+
+
+@app.route('/task/attribute', methods=['POST'])
+@validate_json('attribute', 'create')
+def create_attribute():
+    data = request.get_json()
+    attribute = TaskAttribute.create_from_dict(data)
+
+    db_session.add(attribute)
+
+    try:
+        db_session.commit()
+    except IntegrityError:
+        db_session.rollback()
+        return jsonify(message='Attribute name must be unique.'), 409
+
+    return jsonify(attribute.to_dict()), 201
+
+
+@app.route('/task/attribute/<int:attribute_id>', methods=['DELETE'])
+def delete_attribute(attribute_id):
+    attribute = TaskAttribute.query.get(attribute_id)
+
+    if attribute is None:
+        abort(404)
+
+    db_session.delete(attribute)
+
+    try:
+        db_session.commit()
+    except:
+        db_session.rollback()
+        return jsonify(message='Attribute cannot be deleted'), 409
+
+    return '', 204
+
+
+@app.route('/task/attributes')
+@validate_query('attribute', 'query')
+def get_attributes_list():
+    query_data = request.args.to_dict()
+    attributes = [attribute.to_dict()
+             for attribute in TaskAttribute.query.filter_by(**query_data).all()]
+
+    return jsonify(attributes), 200
