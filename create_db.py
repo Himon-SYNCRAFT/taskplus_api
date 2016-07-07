@@ -96,7 +96,6 @@ def create_db(db_session=None):
     db_session.commit()
 
     tasks_content = [
-        models.TaskAttributeValue(1, 1, 'Laptop Asus'),
         models.TaskAttributeValue(1, 2, 10.00),
         models.TaskAttributeValue(2, 1, 'Laptop Asus2'),
         models.TaskAttributeValue(2, 2, 110.00),

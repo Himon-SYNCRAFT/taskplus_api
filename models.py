@@ -299,7 +299,7 @@ class TaskAttributeValue(Model):
     task_id = Column(Integer, ForeignKey('tasks.id'),
                      primary_key=True, nullable=False)
     task_attribute_id = Column(Integer, ForeignKey(
-        'task_attributes.id', ondelete='RESTRICT'), primary_key=True, nullable=False)
+        'task_attributes.id'), primary_key=True, nullable=False)
 
     def __init__(self, task_id, task_attribute_id, value):
         self.value = value
@@ -312,6 +312,34 @@ class TaskAttributeValue(Model):
             task_id=self.task_id,
             task_attribute_id=self.task_attribute_id
         )
+
+    def _get_fields(self):
+        fields = ['value', 'task_id', 'task_attribute_id']
+
+        return fields
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        value = TaskAttributeValue(value='tmp', task_id=1, task_attribute_id=1)
+
+        for field in value._get_fields():
+            try:
+                setattr(value, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return value
 
 
 class TaskAttributeType(Model):
