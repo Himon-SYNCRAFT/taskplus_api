@@ -322,3 +322,34 @@ class TaskAttributeType(Model):
 
     def __init__(self, name):
         self.name = name
+
+    def _get_fields(self):
+        fields = ['name']
+
+        return fields
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        attribute_type = TaskAttributeType(name='tmp')
+
+        for field in attribute_type._get_fields():
+            try:
+                setattr(attribute_type, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return attribute_type
+
+    def to_dict(self):
+        return dict(id=self.id, name=self.name)

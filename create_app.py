@@ -12,7 +12,7 @@ bcrypt = Bcrypt(app)
 @app.cli.command()
 @click.argument('data', nargs=-1)
 def test(data):
-    case_name = 'test_' + data[0] + '.Test' + data[0].title()
+    case_name = 'test_' + data[0] + '.Test' + data[0].title().replace('_', '')
 
     if len(data) > 1:
         test_name = data[1]
