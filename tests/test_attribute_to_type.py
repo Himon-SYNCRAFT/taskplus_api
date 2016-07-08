@@ -4,6 +4,7 @@ from flask import json
 from models import TaskAttributeToTaskType, TaskAttribute
 from database import db_session
 from exceptions import ValidationError
+from utils import query_from_dict
 import unittest
 
 
@@ -377,5 +378,63 @@ class TestAttributeToType(Base):
     def test_get_attribute_to_type_list_by_invalid_parameter(self):
         response = self.client.get(
             '/task/attribute-to-types?attribute_to_typename=admin&first_name=Daniel')
+
+        self.assertStatus(response, 400)
+
+    def test_get_attribute_to_type_list_complex(self):
+        data = dict(
+            task_type_id=dict(value=1, operator='!='),
+            task_attribute_id=dict(value=1, operator='!=')
+        )
+
+        attribute_to_types = query_from_dict(TaskAttributeToTaskType, data)
+        attribute_to_types_list = [attribute_to_type.to_dict() for attribute_to_type in attribute_to_types]
+
+        response = self.client.post(
+            '/task/attribute-to-types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        data = json.loads(response.get_data())
+
+        self.assertStatus(response, 200)
+        self.assertEqual(data, attribute_to_types_list)
+
+    def test_get_attribute_to_type_list_complex_invalid_parameter(self):
+        data = dict(
+            first_name=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/attribute-to-types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        data = dict(
+            task_type_id=dict(value1=1, operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/attribute-to-types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+    def test_get_attribute_to_type_list_complex_invalid_type(self):
+        data = dict(
+            task_type_id=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/attribute-to-types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
 
         self.assertStatus(response, 400)

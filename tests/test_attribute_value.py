@@ -4,6 +4,7 @@ from flask import json
 from models import TaskAttributeValue, TaskAttribute
 from database import db_session
 from exceptions import ValidationError
+from utils import query_from_dict
 import unittest
 
 
@@ -375,5 +376,62 @@ class TestAttributeValue(Base):
     def test_get_attribute_value_list_by_invalid_parameter(self):
         response = self.client.get(
             '/task/attribute/values?attribute_valuename=admin&first_name=Daniel')
+
+        self.assertStatus(response, 400)
+
+    def test_get_value_list_complex(self):
+        data = dict(
+            value=dict(value='10.00', operator='!=')
+        )
+
+        values = query_from_dict(TaskAttributeValue, data)
+        values_list = [value.to_dict() for value in values]
+
+        response = self.client.post(
+            '/task/attribute/values',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        data = json.loads(response.get_data())
+
+        self.assertStatus(response, 200)
+        self.assertEqual(data, values_list)
+
+    def test_get_value_list_complex_invalid_parameter(self):
+        data = dict(
+            first_name=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/attribute/values',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        data = dict(
+            value=dict(value1='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/attribute/values',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+    def test_get_value_list_complex_invalid_type(self):
+        data = dict(
+            task_id=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/attribute/values',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
 
         self.assertStatus(response, 400)

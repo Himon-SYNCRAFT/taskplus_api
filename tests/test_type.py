@@ -4,6 +4,7 @@ from flask import json
 from models import TaskType, Task
 from database import db_session
 from exceptions import ValidationError
+from utils import query_from_dict
 
 
 class TestType(Base):
@@ -328,5 +329,62 @@ class TestType(Base):
     def test_get_task_type_list_by_invalid_parameter(self):
         response = self.client.get(
             '/task/types?task_typename=admin&first_name=Daniel')
+
+        self.assertStatus(response, 400)
+
+    def test_get_task_type_list_complex(self):
+        data = dict(
+            name=dict(value='Dodaj nowy produkt', operator='!=')
+        )
+
+        task_types = query_from_dict(TaskType, data)
+        task_types_list = [task_type.to_dict() for task_type in task_types]
+
+        response = self.client.post(
+            '/task/types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        data = json.loads(response.get_data())
+
+        self.assertStatus(response, 200)
+        self.assertEqual(data, task_types_list)
+
+    def test_get_task_type_list_complex_invalid_parameter(self):
+        data = dict(
+            first_name=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        data = dict(
+            name=dict(value1='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+    def test_get_task_type_list_complex_invalid_type(self):
+        data = dict(
+            id=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/task/types',
+            data=json.dumps(data),
+            headers={'Content-Type': 'application/json'}
+        )
 
         self.assertStatus(response, 400)

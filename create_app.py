@@ -8,6 +8,7 @@ app.config.from_object('settings.DevelopmentConfig')
 
 bcrypt = Bcrypt(app)
 
+import endpoints
 
 @app.cli.command()
 @click.argument('data', nargs=-1)

@@ -1,5 +1,5 @@
 from voluptuous import All, Length, Schema, ALLOW_EXTRA, Required
-from validation.utils import Coerce
+from validation.utils import Coerce, ValueOperatorPair
 
 
 update = Schema(
@@ -28,5 +28,14 @@ query = Schema(
         'task_attribute_id': Coerce(int),
         'sort': Coerce(int),
         'rules': str
+    },
+)
+
+search = Schema(
+    {
+        'task_type_id': ValueOperatorPair(int),
+        'task_attribute_id': ValueOperatorPair(int),
+        'sort': ValueOperatorPair(int),
+        'rules': ValueOperatorPair(str)
     },
 )

@@ -1,5 +1,5 @@
 from voluptuous import All, Length, Schema, ALLOW_EXTRA, Required
-from validation.utils import Coerce
+from validation.utils import Coerce, ValueOperatorPair
 
 value_min = 1
 
@@ -26,5 +26,13 @@ query = Schema(
         'value': All(str, Length(min=value_min)),
         'task_id': Coerce(int),
         'task_attribute_id': Coerce(int),
+    },
+)
+
+search = Schema(
+    {
+        'value': All(ValueOperatorPair(str), Length(min=value_min)),
+        'task_id': ValueOperatorPair(int),
+        'task_attribute_id': ValueOperatorPair(int),
     },
 )

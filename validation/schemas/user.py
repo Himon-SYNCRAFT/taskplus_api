@@ -1,5 +1,5 @@
-from voluptuous import All, Length, Schema, ALLOW_EXTRA, Required
-from validation.utils import Coerce
+from voluptuous import All, Length, Schema, ALLOW_EXTRA, Required, REMOVE_EXTRA
+from validation.utils import Coerce, ValueOperatorPair
 
 login_min = 5
 login_max = 128
@@ -44,5 +44,17 @@ query = Schema(
         'is_creator': Coerce(bool),
         'is_contractor': Coerce(bool),
         'is_admin': Coerce(bool),
+    },
+)
+
+search = Schema(
+    {
+        'id': ValueOperatorPair(int),
+        'login': All(ValueOperatorPair(str), Length(min=login_min, max=login_max)),
+        'first_name': All(ValueOperatorPair(str), Length(min=first_name_min, max=first_name_max)),
+        'last_name': All(ValueOperatorPair(str), Length(min=last_name_min, max=last_name_max)),
+        'is_creator': ValueOperatorPair(bool),
+        'is_contractor': ValueOperatorPair(bool),
+        'is_admin': ValueOperatorPair(bool),
     },
 )

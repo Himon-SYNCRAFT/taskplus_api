@@ -1,5 +1,5 @@
 from voluptuous import All, Length, Schema, ALLOW_EXTRA, Required
-from validation.utils import Coerce
+from validation.utils import Coerce, ValueOperatorPair
 
 name_min = 1
 name_max = 128
@@ -25,5 +25,13 @@ query = Schema(
         'name': All(str, Length(min=name_min, max=name_max)),
         'type_id': Coerce(int),
         'id': Coerce(int),
+    },
+)
+
+search = Schema(
+    {
+        'name': All(ValueOperatorPair(str), Length(min=name_min, max=name_max)),
+        'type_id': ValueOperatorPair(int),
+        'id': ValueOperatorPair(int),
     },
 )

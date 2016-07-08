@@ -10,5 +10,24 @@ def Coerce(type, msg=None):
         try:
             return type(v)
         except ValueError:
-            raise Invalid(msg or ('expected %s' % type.__name__))
+            raise Invalid(msg or ('Expected %s' % type.__name__))
+    return f
+
+def ValueOperatorPair(type):
+    def f(v):
+        if not isinstance(v, dict):
+            raise Invalid('expected dict')
+
+        if 'operator' in v:
+            operator = v['operator']
+        else:
+            operator = '='
+        if 'value' not in v:
+            raise Invalid("Expected dict which has 'value' key")
+        value = v['value']
+
+        try:
+            return type(value)
+        except ValueError:
+            raise Invalid('Expected %s' % type.__name__)
     return f

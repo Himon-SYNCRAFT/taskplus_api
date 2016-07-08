@@ -4,6 +4,7 @@ from flask import json
 from models import User, Task
 from database import db_session
 from exceptions import ValidationError
+from utils import query_from_dict
 
 
 class TestUser(Base):
@@ -404,7 +405,8 @@ class TestUser(Base):
         self.assertStatus(response, 200)
 
         data = json.loads(response.get_data())
-        users = User.query.filter_by(id=1, login='admin', first_name='Daniel').all()
+        users = User.query.filter_by(
+            id=1, login='admin', first_name='Daniel').all()
 
         users_list = [user.to_dict() for user in users]
 
@@ -413,5 +415,86 @@ class TestUser(Base):
 
     def test_get_user_list_by_invalid_parameter(self):
         response = self.client.get('/users?username=admin&first_name=Daniel')
+
+        self.assertStatus(response, 400)
+
+    def test_get_user_list_complex(self):
+        user_dict = dict(
+            first_name=dict(value='Daniel', operator='!=')
+        )
+
+        users = query_from_dict(User, user_dict)
+        users_list = [user.to_dict() for user in users]
+
+        response = self.client.post(
+            '/users',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        data = json.loads(response.get_data())
+
+        self.assertStatus(response, 200)
+        self.assertEqual(data, users_list)
+
+    def test_get_user_list_complex_invalid_parameter(self):
+        user_dict = dict(
+            name=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/users',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        user_dict = dict(
+            first_name=dict(value1='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/users',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        user_dict = dict(
+            id=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/users',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+    def test_get_user_list_complex_invalid_type(self):
+        user_dict = dict(
+            id=dict(value='Daniel', operator='!=')
+        )
+
+        response = self.client.post(
+            '/users',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 400)
+
+        user_dict = dict(
+            login=dict(value=True, operator='!=')
+        )
+
+        response = self.client.post(
+            '/users',
+            data=json.dumps(user_dict),
+            headers={'Content-Type': 'application/json'}
+        )
 
         self.assertStatus(response, 400)
