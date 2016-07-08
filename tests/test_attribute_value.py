@@ -30,8 +30,6 @@ class TestAttributeValue(Base):
 
     def test_update_from_dict(self):
         attribute_value = TaskAttributeValue.query.first()
-        task_id = attribute_value.task_id
-        task_attribute_id = attribute_value.task_attribute_id
 
         attribute_value_dict = dict(
             value='tmp',
@@ -43,8 +41,8 @@ class TestAttributeValue(Base):
         db_session.add(attribute_value)
         db_session.commit()
 
-        attribute_value = TaskAttributeValue.query.get(
-            (task_id, task_attribute_id))
+        attribute_value = TaskAttributeValue.query.filter_by(
+            **attribute_value_dict).first()
 
         self.assertIsNotNone(attribute_value)
         self.assertEqual(attribute_value_dict['value'], attribute_value.value)
@@ -213,9 +211,6 @@ class TestAttributeValue(Base):
             headers={'Content-Type': 'application/json'}
         )
 
-        for item in TaskAttributeValue.query.all():
-            print(item.to_dict())
-
         self.assertStatus(response, 409)
 
         attribute_value2 = TaskAttributeValue.query.filter(
@@ -363,13 +358,13 @@ class TestAttributeValue(Base):
         self.assertEqual(len(data), count)
 
     def test_get_attribute_value_list_by(self):
-        response = self.client.get('/task/attribute/values?value=json')
+        response = self.client.get('/task/attribute/values?task_id=1')
 
         self.assertStatus(response, 200)
 
         data = json.loads(response.get_data())
         attribute_values = TaskAttributeValue.query.filter_by(
-            value='json').all()
+            task_id=1).all()
 
         attribute_values_list = [attribute_value.to_dict()
                                  for attribute_value in attribute_values]

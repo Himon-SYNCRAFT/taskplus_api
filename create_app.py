@@ -26,3 +26,9 @@ def test(data):
 
     tests = unittest.TestLoader().loadTestsFromName('tests.' + tests_path)
     unittest.TextTestRunner(verbosity=2, failfast=True).run(tests)
+
+
+@app.cli.command()
+def tests():
+    tests = unittest.TestLoader().discover('tests')
+    unittest.TextTestRunner(verbosity=2, failfast=True).run(tests)

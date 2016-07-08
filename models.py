@@ -289,6 +289,45 @@ class TaskAttributeToTaskType(Model):
         self.sort = sort
         self.rules = rules
 
+    def _get_fields(self):
+        fields = ['task_type_id', 'task_attribute_id', 'sort', 'rules']
+
+        return fields
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        item = TaskAttributeToTaskType(
+            task_type_id=1,
+            task_attribute_id=1
+        )
+
+        for field in item._get_fields():
+            try:
+                setattr(item, field, data[field])
+            except KeyError as e:
+                raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return item
+
+    def to_dict(self):
+        return dict(
+            task_type_id=self.task_type_id,
+            task_attribute_id=self.task_attribute_id,
+            sort=self.sort,
+            rules=self.rules
+        )
+
 
 class TaskAttributeValue(Model):
     __tablename__ = 'task_attribute_values'

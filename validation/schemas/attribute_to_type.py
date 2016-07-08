@@ -1,30 +1,32 @@
 from voluptuous import All, Length, Schema, ALLOW_EXTRA, Required
 from validation.utils import Coerce
 
-value_min = 1
 
 update = Schema(
     {
-        'value': All(str, Length(min=value_min)),
-        'task_id': int,
+        'task_type_id': int,
         'task_attribute_id': int,
+        'sort': int,
+        'rules': str
     },
     extra=ALLOW_EXTRA
 )
 
 create = Schema(
     {
-        Required('value'): All(str, Length(min=value_min)),
-        Required('task_id'): int,
+        Required('task_type_id'): int,
         Required('task_attribute_id'): int,
+        'sort': int,
+        'rules': str
     },
     extra=ALLOW_EXTRA
 )
 
 query = Schema(
     {
-        'value': All(str, Length(min=value_min)),
-        'task_id': Coerce(int),
+        'task_type_id': Coerce(int),
         'task_attribute_id': Coerce(int),
+        'sort': Coerce(int),
+        'rules': str
     },
 )

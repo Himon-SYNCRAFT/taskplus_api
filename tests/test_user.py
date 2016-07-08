@@ -395,12 +395,16 @@ class TestUser(Base):
         self.assertEqual(len(data), count)
 
     def test_get_user_list_by(self):
-        response = self.client.get('/users?login=admin&first_name=Daniel')
+        response = self.client.get(
+            '/users?id={}&login={}&first_name={}&last_name={}&is_creator=1&is_contractor=1&is_admin=1'.format(
+                1, 'admin', 'Daniel', 'Zawłocki'
+            )
+        )
 
         self.assertStatus(response, 200)
 
         data = json.loads(response.get_data())
-        users = User.query.filter_by(login='admin', first_name='Daniel').all()
+        users = User.query.filter_by(id=1, login='admin', first_name='Daniel').all()
 
         users_list = [user.to_dict() for user in users]
 

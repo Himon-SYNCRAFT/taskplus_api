@@ -313,12 +313,12 @@ class TestType(Base):
         self.assertEqual(len(data), count)
 
     def test_get_task_type_list_by(self):
-        response = self.client.get('/task/types?name=Nowe')
+        response = self.client.get('/task/types?name=Zmiana%20ceny&id=1')
 
         self.assertStatus(response, 200)
 
         data = json.loads(response.get_data())
-        task_types = TaskType.query.filter_by(name='Nowe').all()
+        task_types = TaskType.query.filter_by(name='Zmiana ceny', id=1).all()
 
         task_types_list = [task_type.to_dict() for task_type in task_types]
 

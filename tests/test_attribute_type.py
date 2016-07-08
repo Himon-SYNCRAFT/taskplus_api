@@ -327,6 +327,19 @@ class TestAttributeType(Base):
         self.assertEqual(len(data), len(attribute_types))
         self.assertListEqual(data, attribute_types_list)
 
+    def test_get_attribute_type_list_by_id(self):
+        response = self.client.get('/task/attribute/types?id=1')
+
+        self.assertStatus(response, 200)
+
+        data = json.loads(response.get_data())
+        attribute_types = TaskAttributeType.query.filter_by(id=1).all()
+
+        attribute_types_list = [attribute_type.to_dict() for attribute_type in attribute_types]
+
+        self.assertEqual(len(data), len(attribute_types))
+        self.assertListEqual(data, attribute_types_list)
+
     def test_get_attribute_type_list_by_invalid_parameter(self):
         response = self.client.get(
             '/task/attribute/types?attribute_typename=admin&first_name=Daniel')

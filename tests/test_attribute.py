@@ -321,12 +321,12 @@ class TestAttribute(Base):
         self.assertEqual(len(data), count)
 
     def test_get_attribute_list_by(self):
-        response = self.client.get('/task/attributes?name=Cena')
+        response = self.client.get('/task/attributes?type_id=3&name=Cena&id=2')
 
         self.assertStatus(response, 200)
 
         data = json.loads(response.get_data())
-        attributes = TaskAttribute.query.filter_by(name='Cena').all()
+        attributes = TaskAttribute.query.filter_by(type_id=3, name='Cena', id=2).all()
 
         attributes_list = [attribute.to_dict() for attribute in attributes]
 

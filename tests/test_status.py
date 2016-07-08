@@ -312,12 +312,12 @@ class TestStatus(Base):
         self.assertEqual(len(data), count)
 
     def test_get_status_list_by(self):
-        response = self.client.get('/task/statuses?name=Nowe')
+        response = self.client.get('/task/statuses?name=Nowe&id=1')
 
         self.assertStatus(response, 200)
 
         data = json.loads(response.get_data())
-        statuss = TaskStatus.query.filter_by(name='Nowe').all()
+        statuss = TaskStatus.query.filter_by(name='Nowe', id=1).all()
 
         statuss_list = [status.to_dict() for status in statuss]
 
