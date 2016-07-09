@@ -1,4 +1,6 @@
 from voluptuous import Invalid
+from datetime import datetime
+
 
 def Coerce(type, msg=None):
     """Coerce a value to a type.
@@ -12,6 +14,7 @@ def Coerce(type, msg=None):
         except ValueError:
             raise Invalid(msg or ('Expected %s' % type.__name__))
     return f
+
 
 def ValueOperatorPair(type):
     def f(v):
@@ -31,3 +34,7 @@ def ValueOperatorPair(type):
         except ValueError:
             raise Invalid('Expected %s' % type.__name__)
     return f
+
+
+def Date(fmt='%Y-%m-%d'):
+    return lambda v: datetime.strptime(v, fmt)

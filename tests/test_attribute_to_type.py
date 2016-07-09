@@ -241,6 +241,29 @@ class TestAttributeToType(Base):
             **attribute_to_type_dict).first()
         self.assertIsNone(attribute_to_type)
 
+    def test_update_attribute_to_type_invalid_indices(self):
+        attribute_to_type_dict = dict(
+            task_type_id=100,
+            task_attribute_id=300,
+            sort=5,
+            rules=''
+        )
+
+        attribute_to_type = TaskAttributeToTaskType.query.first()
+
+        response = self.client.put(
+            "/task/attribute-to-type/{}/{}".format(attribute_to_type.task_type_id,
+                                                   attribute_to_type.task_attribute_id),
+            data=json.dumps(attribute_to_type_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 409)
+
+        attribute_to_type = TaskAttributeToTaskType.query.filter_by(
+            **attribute_to_type_dict).first()
+        self.assertIsNone(attribute_to_type)
+
     def test_create_attribute_to_type(self):
         count_before_insert = TaskAttributeToTaskType.query.count()
 
@@ -303,6 +326,27 @@ class TestAttributeToType(Base):
             attribute_to_type_dict)
         db_session.add(attribute_to_type)
         db_session.commit()
+
+        count_before_insert = TaskAttributeToTaskType.query.count()
+
+        response = self.client.post(
+            '/task/attribute-to-type',
+            data=json.dumps(attribute_to_type_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        count_after_insert = TaskAttributeToTaskType.query.count()
+
+        self.assertStatus(response, 409)
+        self.assertEqual(count_before_insert, count_after_insert)
+
+    def test_create_attribute_to_type_invalid_indices(self):
+        attribute_to_type_dict = dict(
+            task_type_id=100,
+            task_attribute_id=300,
+            sort=5,
+            rules=''
+        )
 
         count_before_insert = TaskAttributeToTaskType.query.count()
 

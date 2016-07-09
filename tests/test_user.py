@@ -413,6 +413,24 @@ class TestUser(Base):
         self.assertEqual(len(data), len(users))
         self.assertListEqual(data, users_list)
 
+        response = self.client.get(
+            '/users?id={}&login={}&first_name={}&last_name={}&is_creator=0&is_contractor=1&is_admin=0'.format(
+                3, 'przoci', 'Przemek', 'Ociepa'
+            )
+        )
+
+        self.assertStatus(response, 200)
+
+        data = json.loads(response.get_data())
+        users = User.query.filter_by(
+            id=3, login='przoci', first_name='Przemek').all()
+
+        users_list = [user.to_dict() for user in users]
+        print(users_list)
+
+        self.assertEqual(len(data), len(users))
+        self.assertListEqual(data, users_list)
+
     def test_get_user_list_by_invalid_parameter(self):
         response = self.client.get('/users?username=admin&first_name=Daniel')
 

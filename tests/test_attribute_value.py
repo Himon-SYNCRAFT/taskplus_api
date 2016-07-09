@@ -244,6 +244,28 @@ class TestAttributeValue(Base):
             value=attribute_value_dict['value']).first()
         self.assertIsNone(attribute_value)
 
+    def test_update_attribute_value_invalid_indices(self):
+        attribute_value_dict = dict(
+            value='tmp',
+            task_id=100,
+            task_attribute_id=100
+        )
+
+        attribute_value = TaskAttributeValue.query.first()
+
+        response = self.client.put(
+            "/task/attribute/value/{}/{}".format(attribute_value.task_id,
+                                                 attribute_value.task_attribute_id),
+            data=json.dumps(attribute_value_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 409)
+
+        attribute_value = TaskAttributeValue.query.filter_by(
+            **attribute_value_dict).first()
+        self.assertIsNone(attribute_value)
+
     def test_create_attribute_value(self):
         count_before_insert = TaskAttributeValue.query.count()
 
@@ -287,6 +309,31 @@ class TestAttributeValue(Base):
         count_after_insert = TaskAttributeValue.query.count()
 
         self.assertStatus(response, 400)
+
+        attribute_value = TaskAttributeValue.query.filter_by(
+            **attribute_value_dict).first()
+
+        self.assertEqual(count_before_insert, count_after_insert)
+        self.assertIsNone(attribute_value)
+
+    def test_create_attribute_value_invalid_indices(self):
+        count_before_insert = TaskAttributeValue.query.count()
+
+        attribute_value_dict = dict(
+            value='tmp',
+            task_id=100,
+            task_attribute_id=100
+        )
+
+        response = self.client.post(
+            '/task/attribute/value',
+            data=json.dumps(attribute_value_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        count_after_insert = TaskAttributeValue.query.count()
+
+        self.assertStatus(response, 409)
 
         attribute_value = TaskAttributeValue.query.filter_by(
             **attribute_value_dict).first()

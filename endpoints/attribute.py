@@ -33,9 +33,9 @@ def update_attribute(attribute_id):
 
     try:
         db_session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db_session.rollback()
-        return jsonify(message='Attribute name must be unique.'), 409
+        return jsonify(message=str(e)), 409
 
     return jsonify(attribute.to_dict()), 200
 
@@ -50,9 +50,9 @@ def create_attribute():
 
     try:
         db_session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db_session.rollback()
-        return jsonify(message='Attribute name must be unique.'), 409
+        return jsonify(message=str(e)), 409
 
     return jsonify(attribute.to_dict()), 201
 

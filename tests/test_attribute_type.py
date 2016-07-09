@@ -292,7 +292,6 @@ class TestAttributeType(Base):
         self.assertStatus(response, 404)
         self.assertEqual(count_before_delete, count_after_delete)
 
-    @unittest.skip("Test fail in sqlite. Work properly on postgres")
     def test_delete_attribute_type_which_cant_be_deleted(self):
         task_attribute = TaskAttribute.query.first()
         attribute_type = TaskAttributeType.query.get(task_attribute.type_id)

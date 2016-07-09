@@ -28,6 +28,7 @@ def validate_json(filename, schema_name):
             except MultipleInvalid as e:
                 message = 'Invalid value for {0}. {1}'.format(
                     e.path, e.error_message)
+                print(message)
                 return jsonify(dict(message=message)), 400
 
             return f(*args, **kw)

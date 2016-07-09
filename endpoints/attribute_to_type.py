@@ -35,9 +35,9 @@ def update_attribute_to_type(task_type_id, task_attribute_id):
 
     try:
         db_session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db_session.rollback()
-        return jsonify(message='Attribute already exist for this task type.'), 409
+        return jsonify(message=str(e)), 409
 
     return jsonify(attribute_to_type.to_dict()), 200
 
@@ -52,12 +52,9 @@ def create_attribute_to_type():
 
     try:
         db_session.commit()
-    except IntegrityError:
+    except (IntegrityError, FlushError) as e:
         db_session.rollback()
-        return jsonify(message='Attribute already exist for this task type.'), 409
-    except FlushError:
-        db_session.rollback()
-        return jsonify(message='Attribute already exist for this task type.'), 409
+        return jsonify(message=str(e)), 409
 
     return jsonify(attribute_to_type.to_dict()), 201
 

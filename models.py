@@ -35,17 +35,17 @@ class User(Model):
 
         self.generate_password_hash(password)
 
-    def _get_fields(self):
-        fields = ['login', 'first_name', 'last_name',
-                  'is_creator', 'is_contractor', 'is_admin']
-
-        return fields
-
     def generate_password_hash(self, password):
         self.password = bcrypt.generate_password_hash(password, rounds=12)
 
     def check_password_hash(self, password):
         return bcrypt.check_password_hash(self.password, password)
+
+    def _get_fields(self):
+        fields = ['login', 'first_name', 'last_name',
+                  'is_creator', 'is_contractor', 'is_admin']
+
+        return fields
 
     def to_dict(self):
         return dict(
@@ -98,7 +98,7 @@ class Task(Model):
     name = Column(String(length=128), nullable=False)
     external_identifier = Column(String(length=128), nullable=True)
     type_id = Column(Integer, ForeignKey('task_types.id'), nullable=False)
-    end_date = Column(DateTime(timezone=True))
+    end_date = Column(DateTime(timezone=True), nullable=True)
     create_date = Column(DateTime(timezone=True), nullable=False)
 
     # Foreign keys
@@ -124,18 +124,54 @@ class Task(Model):
         self.external_identifier = external_identifier
         self.create_date = datetime.today()
 
+    def _get_fields(self):
+        fields = ['name', 'external_identifier', 'type_id',
+                  'type_id', 'end_date', 'create_date',
+                  'status_id', 'creator_id', 'contractor_id']
+
+        return fields
+
+    def _get_required_fields(self):
+        fields = ['name', 'type_id', 'type_id', 'status_id', 'creator_id']
+
+        return fields
+
     def to_dict(self):
         return dict(
             id=self.id,
             name=self.name,
             external_identifier=self.external_identifier,
             type_id=self.type_id,
-            end_date=self.end_date,
-            create_date=self.create_date,
+            end_date=str(self.end_date),
+            create_date=str(self.end_date),
             status_id=self.status_id,
             creator_id=self.creator_id,
             contractor_id=self.contractor_id
         )
+
+    def update_from_dict(self, data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        for field in self._get_fields():
+            if field in data:
+                setattr(self, field, data[field])
+
+    @staticmethod
+    def create_from_dict(data):
+        if not isinstance(data, dict):
+            raise TypeError
+
+        task = Task(name='tmp', type_id=1, status_id=1, creator_id=1)
+
+        for field in task._get_fields():
+            try:
+                setattr(task, field, data[field])
+            except KeyError as e:
+                if field in task._get_required_fields():
+                    raise ValidationError('Invalid class: missing ' + e.args[0])
+
+        return task
 
 
 class TaskStatus(Model):

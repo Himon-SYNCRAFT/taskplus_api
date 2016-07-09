@@ -187,6 +187,22 @@ class TestAttribute(Base):
 
         self.assertNotEqual(attribute2.name, attribute_dict['name'])
 
+    def test_update_attribute_invalid_indices(self):
+        attribute_dict = dict(name='tmp', type_id=100)
+
+        attribute = TaskAttribute.query.first()
+
+        response = self.client.put(
+            '/task/attribute/' + str(attribute.id),
+            data=json.dumps(attribute_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        self.assertStatus(response, 409)
+
+        attribute = TaskAttribute.query.filter_by(**attribute_dict).first()
+        self.assertIsNone(attribute)
+
     def test_update_attribute_invalid_data(self):
         attribute_dict = dict(name=True)
 
@@ -250,6 +266,26 @@ class TestAttribute(Base):
         self.assertEqual(count_before_insert, count_after_insert)
         self.assertIsNone(attribute)
 
+    def test_create_attribute_invalid_indices(self):
+        count_before_insert = TaskAttribute.query.count()
+
+        attribute_dict = dict(name='tmp', type_id=100)
+
+        response = self.client.post(
+            '/task/attribute',
+            data=json.dumps(attribute_dict),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        count_after_insert = TaskAttribute.query.count()
+
+        self.assertStatus(response, 409)
+
+        attribute = TaskAttribute.query.filter_by(**attribute_dict).first()
+
+        self.assertEqual(count_before_insert, count_after_insert)
+        self.assertIsNone(attribute)
+
     def test_create_attribute_duplicate(self):
         attribute_dict = dict(
             name='Indeks',
@@ -297,7 +333,6 @@ class TestAttribute(Base):
         self.assertStatus(response, 404)
         self.assertEqual(count_before_delete, count_after_delete)
 
-    @unittest.skip("This test fail in sqlite but work in postgres. Don't know why.")
     def test_delete_attribute_which_cant_be_deleted(self):
         attribute_value = TaskAttributeValue.query.first()
         attribute = TaskAttribute.query.get(attribute_value.task_attribute_id)
