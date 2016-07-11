@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 import click
 import unittest
 
@@ -7,6 +8,7 @@ app = Flask(__name__)
 app.config.from_object('settings.DevelopmentConfig')
 
 bcrypt = Bcrypt(app)
+CORS(app)
 
 import endpoints
 

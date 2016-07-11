@@ -1,9 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from create_app import bcrypt
 from database import Model
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, \
     Boolean, LargeBinary
 from sqlalchemy.orm import relationship
-from create_app import app, bcrypt
 from exceptions import ValidationError
 
 
@@ -98,8 +98,8 @@ class Task(Model):
     name = Column(String(length=128), nullable=False)
     external_identifier = Column(String(length=128), nullable=True)
     type_id = Column(Integer, ForeignKey('task_types.id'), nullable=False)
-    end_date = Column(DateTime(timezone=True), nullable=True)
-    create_date = Column(DateTime(timezone=True), nullable=False)
+    end_date = Column(DateTime(), nullable=True)
+    create_date = Column(DateTime(), nullable=False)
 
     # Foreign keys
     status_id = Column(Integer, ForeignKey(
@@ -122,7 +122,7 @@ class Task(Model):
         self.status_id = status_id
         self.creator_id = creator_id
         self.external_identifier = external_identifier
-        self.create_date = datetime.today()
+        self.create_date = datetime.utcnow()
 
     def _get_fields(self):
         fields = ['name', 'external_identifier', 'type_id',
@@ -137,17 +137,27 @@ class Task(Model):
         return fields
 
     def to_dict(self):
-        return dict(
+        rv = dict(
             id=self.id,
             name=self.name,
             external_identifier=self.external_identifier,
             type_id=self.type_id,
-            end_date=str(self.end_date),
-            create_date=str(self.end_date),
             status_id=self.status_id,
             creator_id=self.creator_id,
             contractor_id=self.contractor_id
         )
+
+        if self.create_date is not None:
+            rv['create_date']=str(self.create_date.isoformat())
+        else:
+            rv['create_date'] = self.create_date
+
+        if self.end_date is not None:
+            rv['end_date']=str(self.end_date.isoformat())
+        else:
+            rv['end_date'] = self.end_date
+
+        return rv
 
     def update_from_dict(self, data):
         if not isinstance(data, dict):

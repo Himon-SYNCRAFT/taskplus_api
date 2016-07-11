@@ -1,5 +1,6 @@
 from tests.base import Base
 from utils import query_from_dict
+from validation.utils import Date
 from models import User
 
 
@@ -12,7 +13,8 @@ class TestUtils(Base):
         )
 
         users = query_from_dict(User, user_dict)
-        users2 = User.query.filter(User.first_name != 'Daniel', User.id>1).all()
+        users2 = User.query.filter(
+            User.first_name != 'Daniel', User.id > 1).all()
 
         self.assertEqual(users, users2)
 
@@ -51,3 +53,12 @@ class TestUtils(Base):
         users2 = User.query.filter(User.first_name == 'Daniel').all()
 
         self.assertEqual(users, users2)
+
+    def test_date_validation(self):
+        date_parse = Date()
+
+        self.assertEqual(str(date_parse('2016-07-09T14:04:06.947681')),
+                         '2016-07-09 14:04:06.947681')
+
+        self.assertEqual(str(date_parse('2016-07-09T14:04:06.000').isoformat()),
+                         '2016-07-09T14:04:06')

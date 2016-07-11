@@ -36,5 +36,6 @@ def ValueOperatorPair(type):
     return f
 
 
-def Date(fmt='%Y-%m-%d'):
+def Date(fmt='%Y-%m-%dT%H:%M:%S.%f'):
     return lambda v: datetime.strptime(v, fmt)
+    # YYYY-MM-DDTHH:MM:SS
