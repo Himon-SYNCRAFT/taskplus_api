@@ -144,7 +144,7 @@ class Task(Model):
             type_id=self.type_id,
             status_id=self.status_id,
             creator_id=self.creator_id,
-            contractor_id=self.contractor_id
+            contractor_id=self.contractor_id,
         )
 
         if self.create_date is not None:
@@ -156,6 +156,18 @@ class Task(Model):
             rv['end_date']=str(self.end_date.isoformat())
         else:
             rv['end_date'] = self.end_date
+
+        if self.content is not None:
+            rv['content'] = [item.to_dict() for item in self.content]
+
+        if self.status is not None:
+            rv['status'] = self.status.to_dict()
+
+        if self.creator is not None:
+            rv['creator'] = self.creator.to_dict()
+
+        if self.contractor is not None:
+            rv['contractor'] = self.contractor.to_dict()
 
         return rv
 
