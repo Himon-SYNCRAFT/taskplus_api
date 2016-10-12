@@ -68,6 +68,7 @@ class User(Model):
 
     @staticmethod
     def create_from_dict(data):
+        print(data);
         if not isinstance(data, dict):
             raise TypeError
 

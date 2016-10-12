@@ -28,9 +28,9 @@ create = Schema(
         Required('first_name'): All(str, Length(min=first_name_min, max=first_name_max)),
         Required('last_name'): All(str, Length(min=last_name_min, max=last_name_max)),
         Required('password'): All(str, Length(min=password_min, max=password_max)),
-        Required('is_creator'): bool,
-        Required('is_contractor'): bool,
-        Required('is_admin'): bool,
+        Required('is_creator', default=False): bool,
+        Required('is_contractor', default=False): bool,
+        Required('is_admin', default=False): bool,
     },
     extra=ALLOW_EXTRA
 )
